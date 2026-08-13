@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sorteo solidario — Caye</title>
+<meta name="description" content="Números disponibles del sorteo solidario de Caye, en vivo y sin repetir.">
+<style>
+  :root{
+    --paper:#faf8f3;
+    --paper-raised:#ffffff;
+    --ink:#20211d;
+    --ink-soft:#5b5c55;
+    --teal:#2f6f62;
+    --teal-deep:#1f4c43;
+    --taken:#d6482f;
+    --line: rgba(32,33,29,0.14);
+    --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family: var(--mono);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:48px 20px 80px;}
+  header{margin-bottom:36px;}
+  .eyebrow{
+    font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--teal-deep); margin:0 0 14px;
+  }
+  h1{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:clamp(30px,5vw,46px);
+    line-height:1.08;
+    margin:0 0 14px;
+    letter-spacing:-0.01em;
+  }
+  .lede{ max-width:56ch; color:var(--ink-soft); font-size:15px; margin:0; }
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    margin:32px 0 40px;
+  }
+  .stat{ background:var(--paper-raised); padding:16px 18px; }
+  .stat .n{ font-family:var(--serif); font-size:26px; font-weight:600; color:var(--teal-deep); }
+  .stat .l{ font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); margin-top:4px; }
+  .premios{ border:1px solid var(--line); background:var(--paper-raised); padding:20px 22px; margin-bottom:40px; }
+  .premios h2{ font-family:var(--serif); font-size:17px; margin:0 0 12px; }
+  .premios ul{list-style:none;margin:0;padding:0;font-size:14px;}
+  .premios li{ display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px dashed var(--line); }
+  .premios li:last-child{border-bottom:none;}
+  .premios .cierre{ margin-top:12px; font-size:12.5px; color:var(--ink-soft); }
+  .legend{ display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-soft); margin-bottom:16px; }
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:9px;height:9px;border-radius:2px;display:inline-block;}
+  .dot.disp{background:var(--teal);}
+  .dot.res{background:var(--taken);}
+  #grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(64px,1fr));
+    gap:8px;
+    margin-bottom:44px;
+  }
+  .ticket{
+    position:relative;
+    border:1px solid var(--line);
+    background:var(--paper-raised);
+    padding:10px 4px 8px;
+    text-align:center;
+    font-family:var(--mono);
+    font-size:13px;
+    font-weight:600;
+    color:var(--teal-deep);
+    border-radius:2px;
+  }
+  .ticket::after{
+    content:'';
+    position:absolute;
+    left:0; right:0; bottom:5px;
+    border-bottom:1px dashed var(--line);
+  }
+  .ticket.reservado{ color:#fff; background:var(--taken); border-color:var(--taken); }
+  .ticket.reservado::after{border-bottom-color:rgba(255,255,255,.4);}
+  .ticket .who{
+    display:block;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size:9px;
+    font-weight:400;
+    margin-top:3px;
+    opacity:.85;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  footer{
+    border-top:1px solid var(--line);
+    padding-top:22px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+  footer a{color:var(--teal-deep);}
+  .status-msg{font-size:13px; color:var(--ink-soft); padding:20px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Sorteo solidario</p>
+    <h1>500 números, un solo ganador<br>a la vista de todos.</h1>
+    <p class="lede">Cada número que ves acá está tomado directamente de mi planilla de control. No hay lista aparte ni WhatsApp por afuera: lo que ves es lo que hay, actualizado en vivo.</p>
+  </header>
+  <div class="stats" id="stats">
+    <div class="stat"><div class="n" id="statVendidos">—</div><div class="l">Vendidos</div></div>
+    <div class="stat"><div class="n" id="statDisponibles">—</div><div class="l">Disponibles</div></div>
+    <div class="stat"><div class="n" id="statRecaudado">—</div><div class="l">Recaudado</div></div>
+    <div class="stat"><div class="n" id="statPrecio">—</div><div class="l">Valor c/número</div></div>
+  </div>
+  <div class="premios">
+    <h2>¿Cómo se reparte?</h2>
+    <ul>
+      <li><span>🥇 Primer premio</span><span>$585.000</span></li>
+      <li><span>🥈 Segundo premio</span><span>$225.000</span></li>
+      <li><span>🥉 Tercer premio</span><span>$90.000</span></li>
+    </ul>
+    <p class="cierre">El sorteo se realiza en vivo por Instagram cuando se vendan los 500 números, con un sorteador público verificable. El resto de lo recaudado se destina a la causa — el detalle está en mi página de transparencia.</p>
+  </div>
+  <div class="legend">
+    <span><i class="dot disp"></i> Disponible</span>
+    <span><i class="dot res"></i> Reservado</span>
+  </div>
+  <div id="status" class="status-msg">Cargando números…</div>
+  <div id="grid"></div>
+  <footer>
+    <span>Página independiente conectada en vivo a la planilla de control.</span>
+    <span>
+      <a href="https://www.instagram.com/soycaye.ok/" target="_blank" rel="noopener">Instagram</a> ·
+      <a href="https://caye2404.github.io/recaudacioncaye/" target="_blank" rel="noopener">Página de transparencia</a>
+    </span>
+  </footer>
+</div>
+<script>
+const CONFIG = {
+  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSKQiP_Jl6f7SvX1WVA9c39qroTDgNQfoBijbbhbPWgx0SPvt18eq9e37CLQqt-g/pub?gid=1168496489&single=true&output=csv",
+  TOTAL_NUMEROS: 500,
+  PRECIO_POR_NUMERO: 3000,
+};
+const DEMO_DATA = Array.from({length: CONFIG.TOTAL_NUMEROS}, (_, i) => ({
+  numero: String(i + 1).padStart(3, '0'),
+  estado: 'disponible',
+  persona: ''
+}));
+function parseCSV(text){
+  const rows = text.trim().split('\n').map(r => r.split(',').map(c => c.trim().replace(/^"|"$/g,'')));
+  const headers = rows[0].map(h => h.toLowerCase());
+  return rows.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = row[i] || '');
+    return {
+      numero: String(obj.numero || obj['número'] || '').padStart(3,'0'),
+      estado: (obj.estado || 'disponible').toLowerCase(),
+      persona: obj.persona || ''
+    };
+  });
+}
+function render(data){
+  const grid = document.getElementById('grid');
+  const statusEl = document.getElementById('status');
+  statusEl.style.display = 'none';
+  grid.innerHTML = '';
+  const reservados = data.filter(d => d.estado.startsWith('reserv')).length;
+  const disponibles = data.length - reservados;
+  document.getElementById('statVendidos').textContent = reservados;
+  document.getElementById('statDisponibles').textContent = disponibles;
+  document.getElementById('statRecaudado').textContent =
+    '$' + (reservados * CONFIG.PRECIO_POR_NUMERO).toLocaleString('es-AR');
+  document.getElementById('statPrecio').textContent =
+    '$' + CONFIG.PRECIO_POR_NUMERO.toLocaleString('es-AR');
+  data.forEach(d => {
+    const el = document.createElement('div');
+    const reservado = d.estado.startsWith('reserv');
+    el.className = 'ticket' + (reservado ? ' reservado' : '');
+    el.innerHTML = d.numero + (reservado && d.persona ? `<span class="who">${d.persona}</span>` : '');
+    grid.appendChild(el);
+  });
+}
+async function load(){
+  if(!CONFIG.SHEET_CSV_URL){
+    render(DEMO_DATA);
+    document.getElementById('status').style.display = 'block';
+    document.getElementById('status').textContent = 'Mostrando datos de ejemplo.';
+    return;
+  }
+  try{
+    const res = await fetch(CONFIG.SHEET_CSV_URL + '&t=' + Date.now());
+    const text = await res.text();
+    render(parseCSV(text));
+  }catch(err){
+    render(DEMO_DATA);
+    document.getElementById('status').style.display = 'block';
+    document.getElementById('status').textContent = 'No se pudo leer la planilla en este momento.';
+  }
+}
+load();
+</script>
+</body>
+</html>
