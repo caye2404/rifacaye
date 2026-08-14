@@ -172,7 +172,23 @@
     <h1>500 números, 3 ganadores<br>a la vista de todos.</h1>
     <p class="lede">Cada número que ves acá está tomado directamente de mi planilla de control. Elegí un número disponible y escribime por WhatsApp enviando el comprobante y el número elegido. Lo que ves acá se actualiza con el estado de la planilla.</p>
   </header>
+  <div class="alias-box">
+    <div>
+      <strong>📲 ¿Querés participar?</strong><br>
+      <span>Elegí tu número y mandame el comprobante por WhatsApp.</span><br>
+      <span class="alias-valor">Alias: caye2000 · Galicia</span>
+    </div>
 
+    <div class="alias-actions">
+      <button onclick="copiarAlias()">Copiar alias</button>
+
+      <a href="https://wa.me/5491126830194?text=Hola%20Caye%21%20Quiero%20participar%20del%20sorteo.%20Mi%20n%C3%BAmero%20elegido%20es%3A%20%0ATe%20env%C3%ADo%20el%20comprobante."
+         target="_blank"
+         rel="noopener">
+        Mandar comprobante
+      </a>
+    </div>
+  </div>
   <div class="stats" id="stats">
     <div class="stat"><div class="n" id="statVendidos">—</div><div class="l">Vendidos</div></div>
     <div class="stat"><div class="n" id="statDisponibles">—</div><div class="l">Disponibles</div></div>
@@ -296,7 +312,15 @@ async function load(){
       'No se pudo leer la planilla en este momento. Mostrando el último estado disponible localmente.';
   }
 }
+function copiarAlias(){
+  navigator.clipboard.writeText('caye2000');
+  const btn = event.target;
+  const original = btn.textContent;
+  btn.textContent = '¡Copiado!';
+  setTimeout(() => btn.textContent = original, 1500);
+}
 
+load();
 load();
 </script>
 </body>
