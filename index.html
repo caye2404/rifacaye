@@ -513,12 +513,12 @@
     <h1>500 números, 3 ganadores<br>a la vista de todos.</h1>
 
     <p class="lede">
-      Cada número que ves acá está tomado directamente de mi planilla de control.
-      Elegí un número disponible y escribime por WhatsApp enviando el comprobante
-      y el número elegido. Lo que ves acá se actualiza con el estado de la planilla.
+      Elegí o consultá tu número. El importe se calcula automáticamente y, cuando el pago se confirma en el control de Google Sheets, se actualiza el avance. La consulta por WhatsApp no confirma una reserva.
     </p>
 
   </header>
+  <p style="margin:20px 0;padding:18px;background:#e8f3ed;border:2px solid #2f6f62;border-radius:12px;text-align:center"><a href="./participar.html" style="display:inline-block;background:#1f695d;color:#fff;border-radius:8px;padding:14px 18px;font-weight:900;text-decoration:none">🔢 ABRIR GRILLA INTERACTIVA Y VER EL AVANCE EN VIVO ↗</a></p>
+
 
 <section class="tv-support" id="colaborar-todo-vuelve" aria-labelledby="tv-support-title">
  <div class="tv-support-wrap">
@@ -965,165 +965,54 @@ function parseCSV(text){
    RENDERIZAR
    ========================================================= */
 
+
 function render(data){
-
-  const grid =
-    document.getElementById('grid');
-
-  const statusEl =
-    document.getElementById('status');
-
-
-  statusEl.style.display =
-    'none';
-
-  grid.innerHTML =
-    '';
-
-
-  const reservados =
-    data.filter(
-      d =>
-        d.estado.startsWith('reserv')
-    ).length;
-
-
-  const disponibles =
-    data.length - reservados;
-
-
-  document.getElementById(
-    'statVendidos'
-  ).textContent =
-    reservados;
-
-
-  document.getElementById(
-    'statDisponibles'
-  ).textContent =
-    disponibles;
-
-
-  document.getElementById(
-    'statRecaudado'
-  ).textContent =
-    '$' +
-    (
-      reservados *
-      CONFIG.PRECIO_POR_NUMERO
-    ).toLocaleString('es-AR');
-
-
-  document.getElementById(
-    'statPrecio'
-  ).textContent =
-    '$' +
-    CONFIG.PRECIO_POR_NUMERO
-      .toLocaleString('es-AR');
-
-
-  data.forEach(d => {
-
-    const el =
-      document.createElement('div');
-
-
-    const reservado =
-      d.estado.startsWith('reserv');
-
-
-    el.className =
-      'ticket' +
-      (
-        reservado
-          ? ' reservado'
-          : ''
-      );
-
-
-    el.innerHTML =
-      d.numero +
-      (
-        reservado &&
-        d.persona
-          ? `<span class="who">${d.persona}</span>`
-          : ''
-      );
-
-
-    grid.appendChild(el);
-
-  });
-
+  const grid=document.getElementById("grid");grid.innerHTML="";
+  const paid=data.filter(x=>x.estado==="Pagado").length;
+  const available=data.filter(x=>x.estado==="Disponible").length;
+  document.getElementById("statVendidos").textContent=paid;
+  document.getElementById("statDisponibles").textContent=available;
+  document.getElementById("statRecaudado").textContent="$"+(data.filter(x=>x.estado==="Pagado").reduce((v,x)=>v+(Number(x.importe)||Number(x.precio)||3000),0)).toLocaleString("es-AR");
+  document.getElementById("statPrecio").textContent="$"+CONFIG.PRECIO_POR_NUMERO.toLocaleString("es-AR");
+  const frag=document.createDocumentFragment();
+  data.forEach(x=>{
+    const b=document.createElement("button");b.type="button";b.textContent=x.numero;b.title="Número "+x.numero+" — "+x.estado;
+    b.style.cssText="margin:2px;padding:9px 4px;min-width:43px;border-radius:7px;border:1px solid #95a7a1;cursor:pointer;font-weight:800;background:"+
+       (x.estado==="Disponible"?"#dcf4e4":x.estado==="Pagado"?"#435865":x.estado==="Reservado"?"#fff0d1":"#e8eceb")+
+       ";color:"+(x.estado==="Pagado"?"#fff":"#173b38");
+    b.addEventListener("click",()=>{
+      const msg="Hola Caye, quiero consultar el número "+x.numero+" de la rifa solidaria. Precio: $"+(Number(x.precio)||3000).toLocaleString("es-AR")+". ¿Está disponible?";
+      window.open("https://wa.me/5491126830194?text="+encodeURIComponent(msg),"_blank","noopener");
+    });frag.appendChild(b);
+  });grid.appendChild(frag);
 }
-
-
 /* =========================================================
    CARGAR PLANILLA
    ========================================================= */
 
+
 async function load(){
-
-  if(!CONFIG.SHEET_CSV_URL){
-
-    render(DEMO_DATA);
-
-    document.getElementById(
-      'status'
-    ).style.display =
-      'block';
-
-
-    document.getElementById(
-      'status'
-    ).textContent =
-      'Mostrando datos de ejemplo — todavía no conectaste tu planilla.';
-
-    return;
-
-  }
-
-
-  try{
-
-    const res =
-      await fetch(
-        CONFIG.SHEET_CSV_URL +
-        '&t=' +
-        Date.now()
-      );
-
-
-    const text =
-      await res.text();
-
-
-    render(
-      parseCSV(text)
-    );
-
-
-  }catch(err){
-
-    render(DEMO_DATA);
-
-
-    document.getElementById(
-      'status'
-    ).style.display =
-      'block';
-
-
-    document.getElementById(
-      'status'
-    ).textContent =
-      'No se pudo leer la planilla en este momento. Mostrando el estado local de referencia.';
-
-  }
-
+ const status=document.getElementById("status");status.style.display="block";status.textContent="Conectando con Google Sheets...";
+ try{
+   const url="https://docs.google.com/spreadsheets/d/1LtPuRytE6Be4C3aGYvIjX4ekx16jVjpVOpgF075zVwY/gviz/tq?gid=831265420&headers=1&tqx=out:json&t="+Date.now();
+   const response=await fetch(url,{cache:"no-store"});if(!response.ok)throw Error("Hoja sin acceso público");
+   const raw=await response.text(),a=raw.indexOf("setResponse("),b=raw.lastIndexOf(")");
+   if(a<0||b<a)throw Error("Respuesta inválida");
+   const d=JSON.parse(raw.slice(a+12,b));if(d.status!=="ok"||!d.table?.rows)throw Error("Google Sheets no disponible");
+   const records=d.table.rows.map(r=>{
+     const c=r.c||[],n=String(c[0]?.v??"").padStart(3,"0");
+     const e=String(c[1]?.v||"Por verificar");
+     return {numero:n,estado:["Disponible","Solicitado","Reservado","Pagado","Por verificar","Anulado"].includes(e)?e:"Por verificar",precio:Number(c[2]?.v)||3000,importe:Number(c[3]?.v)||0};
+   }).filter(x=>/^\d{3}$/.test(x.numero)&&+x.numero>=1&&+x.numero<=500);
+   if(records.length!==500)throw Error("Registro incompleto");
+   CONFIG.PRECIO_POR_NUMERO=records[0]?.precio||3000;
+   render(records);status.style.display="none";
+ }catch(err){
+   render(DEMO_DATA.map(x=>({...x,estado:"Por verificar",precio:3000,importe:0})));
+   ["statVendidos","statDisponibles","statRecaudado"].forEach(id=>document.getElementById(id).textContent="—");
+   status.textContent="Los estados de Google Sheets todavía no son públicos. Podés consultar un número por WhatsApp, pero su disponibilidad y cobro deben confirmarse.";
+ }
 }
-
-
 /* =========================================================
    COPIAR ALIAS
    ========================================================= */
