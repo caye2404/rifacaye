@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sorteo solidario — Caye</title>
-<meta name="description" content="Registro histórico de la rifa original de 500 números de Caye. Participaciones pendientes de conciliación; verificar antes de cualquier pago.">
+<meta name="description" content="Números disponibles del sorteo solidario de Caye, en vivo y sin repetir.">
 
 <style>
   :root{
@@ -514,7 +514,7 @@
 
     <p class="lede">
       Cada número que ves acá está tomado directamente de mi planilla de control.
-      Los números anteriores están en revisión. Escribime por WhatsApp si querés verificar una participación
+      Elegí un número disponible y escribime por WhatsApp enviando el comprobante
       y el número elegido. Lo que ves acá se actualiza con el estado de la planilla.
     </p>
 
@@ -801,8 +801,7 @@
   </div>
 
 
-  <div role="status" style="margin:20px auto;padding:22px;max-width:980px;border:2px solid #bf9051;border-radius:12px;background:#fff8e9;color:#25211e;font-family:Arial,sans-serif;line-height:1.6"><strong style="display:block;font-size:20px">⚠️ RIFA ORIGINAL: NÚMEROS EN CONCILIACIÓN</strong>La planilla anterior dejó de estar disponible. No hay números libres, vendidos o pagados verificados para publicar. <strong>No transfieras para comprar un número desde esta página.</strong> Si ya participaste, conservá tu comprobante y consultá el <a style="font-weight:bold;color:#17514e;text-decoration:underline" href="https://caye2404.github.io/recaudacioncaye/rifa-500.html">registro de verificación de los 500 números</a>.</div>
-<!-- ESTADO -->
+  <!-- ESTADO -->
 
   <div id="status" class="status-msg">
     Cargando números…
@@ -1063,30 +1062,111 @@ function render(data){
    CARGAR PLANILLA
    ========================================================= */
 
-function load(){
-  // La publicación CSV original ya no es accesible. Nunca mostrar datos de ejemplo como disponibilidad real.
-  const status=document.getElementById('status');
-  const grid=document.getElementById('grid');
-  if(status){
-    status.style.display='block';
-    status.innerHTML='<strong>REGISTRO HISTÓRICO EN CONCILIACIÓN</strong> — Los 500 números están pendientes de verificación. No se habilitan reservas ni pagos de números desde esta página.';
+async function load(){
+
+  if(!CONFIG.SHEET_CSV_URL){
+
+    render(DEMO_DATA);
+
+    document.getElementById(
+      'status'
+    ).style.display =
+      'block';
+
+
+    document.getElementById(
+      'status'
+    ).textContent =
+      'Mostrando datos de ejemplo — todavía no conectaste tu planilla.';
+
+    return;
+
   }
-  if(grid){
-    grid.innerHTML='<div style="margin:16px auto;padding:22px;max-width:650px;border:2px solid #b39150;border-radius:12px;background:#f5f1e7;color:#202421;text-align:center;line-height:1.7"><strong style="display:block;font-size:19px">No hay números disponibles confirmados</strong><p>La conexión con la planilla pública anterior dejó de funcionar. Estamos reconstruyendo las participaciones originales sin borrar registros ni asignar números falsamente libres.</p><a style="display:inline-block;background:#173b3a;color:#fff;padding:13px 16px;border-radius:8px;text-decoration:none;font-weight:bold" href="https://caye2404.github.io/recaudacioncaye/rifa-500.html">VER REGISTRO DE 500 NÚMEROS ↗</a></div>';
+
+
+  try{
+
+    const res =
+      await fetch(
+        CONFIG.SHEET_CSV_URL +
+        '&t=' +
+        Date.now()
+      );
+
+
+    const text =
+      await res.text();
+
+
+    render(
+      parseCSV(text)
+    );
+
+
+  }catch(err){
+
+    render(DEMO_DATA);
+
+
+    document.getElementById(
+      'status'
+    ).style.display =
+      'block';
+
+
+    document.getElementById(
+      'status'
+    ).textContent =
+      'No se pudo leer la planilla en este momento. Mostrando el estado local de referencia.';
+
   }
-  ['statVendidos','statDisponibles','statRecaudado','objCurrent','objCurrentUsd','circlePercentage'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.textContent='—';
-  });
-  const progress=document.getElementById('circleProgress');
-  if(progress)progress.setAttribute('stroke-dasharray','0, 100');
-  document.querySelectorAll('a[href*="wa.me/"]').forEach(a=>{
-    const href=a.getAttribute('href')||'';
-    if(/Quiero%20participar|ya%20transfer|numero%20elegido|n%C3%BAmero%20elegido/i.test(href)){
-      a.href='https://wa.me/5491126830194?text=Hola%20Caye%2C%20quiero%20verificar%20el%20estado%20de%20un%20numero%20de%20la%20rifa%20original.';
-      a.textContent='VERIFICAR PARTICIPACIÓN POR WHATSAPP';
-    }
-  });
+
 }
+
+
+/* =========================================================
+   COPIAR ALIAS
+   ========================================================= */
+
+function copiarAlias(btn){
+
+  navigator.clipboard
+    .writeText('caye2404.astro')
+    .then(() => {
+
+      const original =
+        btn.textContent;
+
+
+      btn.textContent =
+        '¡Copiado!';
+
+
+      setTimeout(
+        () => {
+
+          btn.textContent =
+            original;
+
+        },
+        1500
+      );
+
+    })
+    .catch(() => {
+
+      btn.textContent =
+        'Copiá: caye2404.astro';
+
+    });
+
+}
+
+
+/* =========================================================
+   INICIAR
+   ========================================================= */
+
 load();
 
 </script>
