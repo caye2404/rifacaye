@@ -114,7 +114,7 @@ let states=new Map(),chosen=null,loaded=false,reqNum=0;
 const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(n);
 for(let i=1;i<=500;i++){
  const n=String(i).padStart(3,'0'),b=document.createElement('button');b.className='num';b.textContent=n;b.dataset.n=n;b.type='button';b.disabled=true;
- b.addEventListener('click',()=>{if(states.get(n)!=='Disponible')return;chosen=n;$('numInput').value=n;document.querySelectorAll('.num').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));$('selected').textContent='Número elegido: '+n+' · $3.000 ARS';$('reserveStatus').textContent='Escribí tu nombre para solicitar la reserva del '+n+'.';$('reserveBtn').disabled=false;updateWA();updateDynamicLabels()});
+ b.addEventListener('click',()=>{if(states.get(n)!=='Disponible')return;chosen=n;$('numInput').value=n;document.querySelectorAll('.num').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));$('selected').textContent=tr('Número elegido: ','Selected number: ')+n+tr(' · $3.000 ARS',' · ARS $3,000');$('reserveStatus').textContent=tr('Escribí tu nombre para solicitar la reserva del ','Enter your name to reserve number ')+n+'.';$('reserveBtn').disabled=false;updateWA();updateDynamicLabels()});
  $('numbers').append(b);
 }
 function updateWA(){const num=chosen||'[número]',name=$('person')?.value?.trim()||'[mi nombre]';const msg='Hola Caye, quiero participar con el número '+num+'. Soy '+name+'. Te escribo para confirmar mi reserva y enviarte el comprobante de pago.';$('wa').href='https://wa.me/5491126830194?text='+encodeURIComponent(msg)}
@@ -133,7 +133,7 @@ function requestStates(){
 }
 async function load(){
  if(!loaded){document.querySelectorAll('.num').forEach(b=>b.disabled=true)}
- $('counts').textContent='Actualizando números…';
+ $('counts').textContent=tr('Actualizando números…','Updating numbers…');
  try{
   const data=await requestStates();
   if(!data||!data.ok||!Array.isArray(data.numeros)||data.numeros.length!==500)throw Error('Respuesta incompleta');
@@ -150,9 +150,9 @@ async function load(){
   $('raised').textContent=money(total);$('percent').textContent=pct.toFixed(1)+'%';
   $('ring').style.background='conic-gradient(var(--mint) '+pct+'%,#33425e 0)';
   $('counts').textContent=paid+' pagados · '+reserved+' reservados · '+free+' disponibles'+(check?' · '+check+' por verificar':'');
-  $('warning').textContent='✅ Conectado a Google Sheets. Los números se reservan con bloqueo de concurrencia; los pagos se confirman después de verificarlos.';
+  $('warning').textContent=tr('✅ Conectado a Google Sheets. Los números se reservan con bloqueo de concurrencia; los pagos se confirman después de verificarlos.','✅ Connected to Google Sheets. Reservations use concurrency protection; payment is confirmed only after verification.');
   loaded=true;updateDynamicLabels();if(chosen&&states.get(chosen)!=='Disponible'){$('reserveBtn').disabled=true;$('selected').textContent='El número '+chosen+' ya no está disponible. Elegí otro.';chosen=null;$('numInput').value='';updateWA()}
- }catch(err){loaded=false;$('warning').textContent='🔒 Sin conexión con Google Sheets: reservas desactivadas para evitar duplicaciones.';$('counts').textContent='No se pudo cargar disponibilidad';$('reserveBtn').disabled=true;document.querySelectorAll('.num').forEach(b=>b.disabled=true)}
+ }catch(err){loaded=false;$('warning').textContent=tr('🔒 Sin conexión con Google Sheets: reservas desactivadas para evitar duplicaciones.','🔒 Google Sheets is unavailable: reservations have been disabled to avoid duplicate numbers.');$('counts').textContent=tr('No se pudo cargar disponibilidad','Could not load availability');$('reserveBtn').disabled=true;document.querySelectorAll('.num').forEach(b=>b.disabled=true)}
 }
 let reservationPending=null,monitorIndex=0;
 function closeResult(){
@@ -162,9 +162,9 @@ function closeResult(){
 function showResult(number,name){
  $('reservationOverlay').hidden=false;document.body.classList.add('reservation-active');
  $('resultNum').textContent=number;
- $('resultTitle').textContent='Estamos verificando tu reserva';
+ $('resultTitle').textContent=tr('Estamos verificando tu reserva','Checking your reservation');
  $('resultIcon').textContent='⏳';$('resultIcon').className='reservation-emblem';
- $('resultText').textContent='Comprobando la reserva en Google Sheets. No transfieras todavía.';
+ $('resultText').textContent=tr('Comprobando la reserva en Google Sheets. No transfieras todavía.','Checking the reservation in Google Sheets. Do not pay yet.');
  $('resultActions').hidden=true;$('resultRetry').hidden=true;
  $('reservationOverlay').scrollTop=0;$('closeResult').focus();
  const msg='Hola Caye, soy '+name+'. Elegí el número '+number+' de RIFA CAYE. Quiero confirmar que quedó reservado a mi nombre y enviarte el comprobante de pago.';
@@ -179,16 +179,16 @@ async function checkReservation(number,expectedMonitor){
   const state=reply.numeros.find(x=>x.numero===number)?.estado;
   if(state==='Reservado'){
    $('resultIcon').textContent='✓';$('resultIcon').className='reservation-emblem success';
-   $('resultTitle').textContent='¡Tu número figura reservado!';
-   $('resultText').textContent='El '+number+' aparece reservado en Google Sheets durante 30 minutos. Enviá tu comprobante por WhatsApp para confirmar que la reserva está a tu nombre. El pago todavía no está confirmado.';
+   $('resultTitle').textContent=tr('¡Tu número figura reservado!','This number appears reserved!');
+   $('resultText').textContent=currentLang==='en'?'Number '+number+' is reserved in Google Sheets for 30 minutes. Contact Caye via WhatsApp to verify the reservation is under your name before paying. Payment is not yet confirmed.':'El '+number+' aparece reservado en Google Sheets durante 30 minutos. Enviá tu comprobante por WhatsApp para confirmar que la reserva está a tu nombre. El pago todavía no está confirmado.';
    $('resultActions').hidden=false;$('resultRetry').hidden=true;
    $('reserveStatus').textContent='El número '+number+' figura reservado en el sistema. El comprobante se valida por WhatsApp.';
    load();return true;
   }
   if(state==='Pagado'){
    $('resultIcon').textContent='✓';$('resultIcon').className='reservation-emblem success';
-   $('resultTitle').textContent='Número registrado como pagado';
-   $('resultText').textContent='El número '+number+' ya figura como pagado. Contactá a Caye si necesitás verificar tu participación.';
+   $('resultTitle').textContent=tr('Número registrado como pagado','Number already marked as paid');
+   $('resultText').textContent=currentLang==='en'?'Number '+number+' is already marked as paid. Contact Caye to verify your participation.':'El número '+number+' ya figura como pagado. Contactá a Caye si necesitás verificar tu participación.';
    $('resultActions').hidden=true;$('resultRetry').hidden=false;
    load();return true;
   }
@@ -197,8 +197,8 @@ async function checkReservation(number,expectedMonitor){
 }
 function resultFailure(number){
  $('resultIcon').textContent='!';$('resultIcon').className='reservation-emblem error';
- $('resultTitle').textContent='No pudimos confirmar tu reserva';
- $('resultText').textContent='El número '+number+' todavía no aparece reservado. No transfieras dinero. Podés volver a comprobar o consultarle a Caye por WhatsApp.';
+ $('resultTitle').textContent=tr('No pudimos confirmar tu reserva','We could not confirm your reservation');
+ $('resultText').textContent=currentLang==='en'?'Number '+number+' is not showing as reserved yet. Do not pay. You can check again or ask Caye on WhatsApp.':'El número '+number+' todavía no aparece reservado. No transfieras dinero. Podés volver a comprobar o consultarle a Caye por WhatsApp.';
  $('resultActions').hidden=true;$('resultRetry').hidden=false;
  $('reserveStatus').textContent='No se confirmó la reserva. No transfieras hasta resolverlo.';
  $('reserveBtn').disabled=true;
@@ -220,7 +220,7 @@ $('reserveForm').addEventListener('submit',e=>{
  if(name.length<3){e.preventDefault();alert('Escribí tu nombre y apellido.');return}
  $('numInput').value=number;
  $('reserveBtn').disabled=true;
- $('reserveStatus').textContent='Procesando la reserva del '+number+' en Google Sheets…';
+ $('reserveStatus').textContent=currentLang==='en'?'Processing reservation for number '+number+' in Google Sheets…':'Procesando la reserva del '+number+' en Google Sheets…';
  showResult(number,name);
  const current=++monitorIndex;
  monitorReservation(number,current);
@@ -229,8 +229,8 @@ $('closeResult').onclick=closeResult;$('backToNumbers').onclick=closeResult;
 $('retryCheck').onclick=()=>{
  if(reservationPending){return}
  const n=$('resultNum').textContent;const current=++monitorIndex;
- $('resultTitle').textContent='Comprobando de nuevo';$('resultIcon').textContent='⏳';
- $('resultText').textContent='Consultando el registro de Google Sheets…';
+ $('resultTitle').textContent=tr('Comprobando de nuevo','Checking again');$('resultIcon').textContent='⏳';
+ $('resultText').textContent=tr('Consultando el registro de Google Sheets…','Checking Google Sheets records…');
  $('resultRetry').hidden=true;monitorReservation(n,current);
 };
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('reservationOverlay').hidden)closeResult()});
